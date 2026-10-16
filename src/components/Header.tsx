@@ -228,34 +228,6 @@ export default function Header() {
             <div className="hdr-phase-desktop"><PhaseStatusBadge /></div>
             <WalletButton />
 
-            {/* Desktop account menu (connected wallets only) */}
-            {address && accountVisible.length > 0 && (
-              <div
-                className={`hdr-group hdr-account ${open === 'account' ? 'open' : ''}`}
-                onMouseEnter={() => hoverOpen('account')}
-                onMouseLeave={hoverClose}
-                onKeyDown={e => onGroupKey(e, 'account')}
-                onBlur={onGroupBlur}
-              >
-                <div className="hdr-trigger">
-                  <button
-                    type="button"
-                    className="hdr-label"
-                    aria-haspopup="menu"
-                    aria-expanded={open === 'account'}
-                    onClick={() => setOpen(open === 'account' ? null : 'account')}
-                  >
-                    Account
-                  </button>
-                </div>
-                <div className="hdr-panel-wrap">
-                  <div className="hdr-panel" role="menu" aria-label="Account">
-                    {accountVisible.map(it => renderItem(it, 'menuitem'))}
-                  </div>
-                </div>
-              </div>
-            )}
-
             <button
               ref={burgerRef}
               type="button"
