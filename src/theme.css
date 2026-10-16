@@ -1,0 +1,19 @@
+:root {
+  --bg: #fdf3df;
+  --paper: #fff8ea;
+  --ink: #111;
+  --lime: #c6f51a;
+  --orange: #ff5a00;
+  --teal: #5ee8d5;
+  --purple: #7b4dff;
+  --pink: #ff7ad9;
+  --white: #fff;
+  --bw: 3px;
+  --r: 16px;
+  --sh: 6px;
+  --shadow: var(--sh) var(--sh) 0 var(--ink);
+  --font-head: 'Bricolage Grotesque', system-ui, sans-serif;
+  --font-body: 'DM Sans', system-ui, sans-serif;
+  --maxw: 1120px;
+  --scale: 1;
+}
