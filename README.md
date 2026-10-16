@@ -209,5 +209,4 @@ To go live:
 ## Disclaimer
 
 NFTs are digital collectibles. Value can go to zero. Not financial advice. Do your own research.
-#   M o a i - C l u b  
- 
+#
