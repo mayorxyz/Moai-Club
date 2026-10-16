@@ -64,7 +64,7 @@ export default function Footer() {
       <div className="footer-brand">
         <div>
           <strong>{config.collection.name}</strong>
-          <p>5,000 unique Moai. One blockchain. Your legacy.</p>
+          <p>200+ unique Moai. One blockchain. Your legacy.</p>
         </div>
         <div className="footer-social">
           {x && (

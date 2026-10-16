@@ -95,8 +95,8 @@ All content lives in `src/data/` and is re-exported through `src/drop.config.ts`
 export const collection = {
   name: 'Moai Club',
   symbol: 'MC',
-  description: 'A generative collection of 5,000 unique moai...',
-  totalSupply: 5000,
+  description: 'A generative collection of 200+ unique moai...',
+  totalSupply: 203,
   royaltyPercent: 5,
 };
 

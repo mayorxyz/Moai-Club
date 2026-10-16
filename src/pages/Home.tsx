@@ -26,7 +26,7 @@ export default function Home() {
                 <span className="hl">the digital frontier.</span>
               </h1>
               <p className="hero-lead">{config.collection.description}</p>
-              <p className="hero-bold">5,000 unique Moai. One blockchain. Your legacy.</p>
+              <p className="hero-bold">200+ unique Moai. One blockchain. Your legacy.</p>
               <div className="hero-btns">
                 <Link to="/mint" className="btn primary">Mint Now</Link>
                 <Link to="/collection" className="btn">View Collection</Link>
@@ -49,7 +49,7 @@ export default function Home() {
               </div>
               <span className="float tag t1">Rare</span>
               <span className="float tag t2">Minted</span>
-              <span className="float tag t3">1 / 5000</span>
+              <span className="float tag t3">1 / 203</span>
               <span className="float tag t4">Allowlist live</span>
               <span className="float tag t5">Reveal soon</span>
             </div>

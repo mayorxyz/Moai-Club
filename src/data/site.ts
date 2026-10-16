@@ -3,8 +3,8 @@
 export const collection = {
   name: 'Moai Club',
   symbol: 'MC',
-  description: 'A generative collection of 5,000 unique moai stone heads exploring the digital frontier.',
-  totalSupply: 5000,
+  description: 'A generative collection of 200+ unique moai stone heads exploring the digital frontier.',
+  totalSupply: 203,
   royaltyPercent: 5,
 };
 
@@ -22,8 +22,8 @@ export const contract = {
 };
 
 export const links = {
-  twitter: 'https://twitter.com/moaiclub',
-  discord: 'https://discord.gg/moaiclub',
+  twitter: 'https://x.com/mayor_1_7',
+  discord: 'https://x.com/mayor_1_7',
   marketplace: 'https://opensea.io',
 };
 

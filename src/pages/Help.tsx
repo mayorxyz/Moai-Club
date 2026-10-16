@@ -60,7 +60,7 @@ export default function Help() {
 
       <div className="box" style={{ marginTop: '24px', textAlign: 'center', background: 'var(--teal)' }}>
         <h3 style={{ marginBottom: '6px' }}>Still stuck?</h3>
-        <p style={{ margin: '0 0 10px', fontSize: '13px' }}>Reach out to our support team.</p>
+        <p style={{ margin: '0 auto 10px', fontSize: '13px', textAlign: 'center' }}>Reach out to our support team.</p>
         <a href={`mailto:${config.media.contactEmail}`} className="btn sm">{config.media.contactEmail}</a>
       </div>
     </section>

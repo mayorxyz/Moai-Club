@@ -19,13 +19,13 @@ interface AppState {
   walletMinted: number;
   mobileMenuOpen: boolean;
   walletModalOpen: boolean;
-  connectWallet: (address: string) => void;
+  connectWallet: (address: string, chainId: number, balance: string) => void;
   disconnectWallet: () => void;
   setMintStatus: (s: MintStatus) => void;
   setMintQuantity: (q: number) => void;
   setMobileMenuOpen: (o: boolean) => void;
   setWalletModalOpen: (o: boolean) => void;
-  simulateMint: () => void;
+  simulateMint: (preferredIds?: number[]) => void;
 }
 
 export const useStore = create<AppState>((set, get) => ({
@@ -39,12 +39,12 @@ export const useStore = create<AppState>((set, get) => ({
   mintedTokens: [],
   lastMintedTokens: [],
   errorMessage: null,
-  totalMinted: config.mock ? 1847 : 0,
+  totalMinted: config.mock ? 147 : 0,
   walletMinted: 0,
   mobileMenuOpen: false,
   walletModalOpen: false,
-  connectWallet: (address) => {
-    set({ walletConnected: true, walletAddress: address, chainId: config.chain.chainId, balance: '2.45', mintStatus: 'ready' });
+  connectWallet: (address, chainId, balance) => {
+    set({ walletConnected: true, walletAddress: address, chainId, balance, mintStatus: chainId === config.chain.chainId ? 'ready' : 'wrong-network' });
   },
   disconnectWallet: () => {
     set({ walletConnected: false, walletAddress: null, chainId: null, balance: '0', mintStatus: 'no-wallet', walletMinted: 0, txHash: null, mintedTokens: [], lastMintedTokens: [], errorMessage: null });
@@ -53,7 +53,7 @@ export const useStore = create<AppState>((set, get) => ({
   setMintQuantity: (q) => set({ mintQuantity: q }),
   setMobileMenuOpen: (o) => set({ mobileMenuOpen: o }),
   setWalletModalOpen: (o) => set({ walletModalOpen: o }),
-  simulateMint: () => {
+  simulateMint: (preferredIds?: number[]) => {
     const state = get();
     if (!config.mock) return;
     set({ mintStatus: 'pending-signature' });
@@ -64,15 +64,28 @@ export const useStore = create<AppState>((set, get) => ({
         // Hand out REAL token IDs from the collection (not already owned),
         // so minted NFTs have artwork on the My NFTs page.
         const ownedIds = new Set(state.mintedTokens.map(t => t.id));
-        const available = config.nfts.filter(nft => !ownedIds.has(nft.id));
-        // Shuffle and pick `qty` tokens
+        const byId = new Map(config.nfts.map(nft => [nft.id, nft]));
+        const newTokens: { id: number; name: string }[] = [];
+        // 1) Honor explicitly requested token IDs first (e.g. ?token= on the Mint page),
+        //    filling up to `qty` with already-owned skipped.
+        for (const id of preferredIds ?? []) {
+          if (newTokens.length >= qty) break;
+          const nft = byId.get(id);
+          if (nft && !ownedIds.has(nft.id) && !newTokens.some(t => t.id === nft.id)) {
+            newTokens.push({ id: nft.id, name: nft.name });
+          }
+        }
+        // 2) Fill any remaining slots randomly from what's left.
+        const available = config.nfts.filter(nft => !ownedIds.has(nft.id) && !newTokens.some(t => t.id === nft.id));
+        // Shuffle and pick the remainder
         for (let i = available.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
           [available[i], available[j]] = [available[j], available[i]];
         }
-        const newTokens: { id: number; name: string }[] = available
-          .slice(0, qty)
-          .map(nft => ({ id: nft.id, name: nft.name }));
+        for (const nft of available) {
+          if (newTokens.length >= qty) break;
+          newTokens.push({ id: nft.id, name: nft.name });
+        }
         set({
           mintStatus: 'success',
           mintedTokens: [...state.mintedTokens, ...newTokens],

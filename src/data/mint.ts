@@ -50,7 +50,7 @@ export const staking = { enabled: false, contract: '', rewardToken: '', rules: '
 
 export const holder = {
   perks: [
-    { id: 'discord-role', title: 'Discord Role', description: 'Get the Moai role in our Discord server.', requiredBalance: 1, type: 'link' as const, payload: 'https://discord.gg/moaiclub' },
+    { id: 'discord-role', title: 'Discord Role', description: 'Get the Moai role in our Discord server.', requiredBalance: 1, type: 'link' as const, payload: 'https://x.com/mayor_1_7' },
     { id: 'wallpaper-pack', title: 'Wallpaper Pack', description: 'Download high-res wallpapers featuring Moai Club.', requiredBalance: 1, type: 'download' as const, payload: '/downloads/wallpapers.zip' },
     { id: 'secret-message', title: 'Secret Message', description: 'Unlock a hidden message from the artist.', requiredBalance: 2, type: 'text' as const, payload: 'The frontier awaits those who dare to explore.' },
   ],

@@ -1203,6 +1203,7 @@ img {
 }
 
 .wallet-option {
+  width: 100%;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -1216,7 +1217,14 @@ img {
   transition: transform 0.12s, box-shadow 0.12s;
   font: 700 15px var(--font-head);
   min-height: 56px;
+  color: var(--ink);
+  text-align: left;
   -webkit-tap-highlight-color: transparent;
+}
+
+.wallet-option:disabled {
+  cursor: wait;
+  opacity: 0.7;
 }
 
 .wallet-option:active {

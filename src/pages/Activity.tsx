@@ -30,7 +30,7 @@ export default function Activity() {
   const [now, setNow] = useState(Date.now());
   const [events, setEvents] = useState<Ev[]>(() => {
     const t = Date.now();
-    return Array.from({ length: 20 }, (_, i) => makeEvent(i, 5000 - i, t - i * 300000, i % 2 === 0 ? 'Mint' : 'Transfer'));
+    return Array.from({ length: 20 }, (_, i) => makeEvent(i, 203 - i, t - i * 300000, i % 2 === 0 ? 'Mint' : 'Transfer'));
   });
 
   useEffect(() => {
@@ -44,7 +44,7 @@ export default function Activity() {
       setEvents(prev => {
         const id = prev[0] ? prev[0].id + 1 : 0;
         const type: Ev['type'] = Math.random() > 0.5 ? 'Mint' : 'Transfer';
-        const next = makeEvent(id, Math.max(1, (prev[0]?.tokenId ?? 5000) - 1), Date.now(), type);
+        const next = makeEvent(id, Math.max(1, (prev[0]?.tokenId ?? 203) - 1), Date.now(), type);
         return [{ ...next, fresh: true }, ...prev.map(e => ({ ...e, fresh: false }))].slice(0, 30);
       });
     }, 6000);
@@ -73,12 +73,7 @@ export default function Activity() {
         </span>
       </div>
 
-      {config.mock && (
-        <div className="box act-demo">
-          <Icon name="warning" size={18} />
-          <p>Demo mode — showing simulated events.</p>
-        </div>
-      )}
+     
 
       <div className="act-stats">
         <div className="box"><b>{counts.all}</b><span>Events</span></div>

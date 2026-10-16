@@ -8,6 +8,10 @@ import { ProgressiveImage } from '../components/ProgressiveImage';
 import { useCountdown } from '../hooks/useCountdown';
 import { Icon } from '../components/Icon';
 
+// Full NFT records (with image/thumb) for the tokens just minted,
+// so the success card shows the real artwork — not a placeholder.
+const nftById = new Map(config.nfts.map(nft => [nft.id, nft]));
+
 const hex = (n: number) => Math.random().toString(16).slice(2, 2 + n);
 
 const WHY: Record<string, string> = {
@@ -21,7 +25,20 @@ const WHY: Record<string, string> = {
 };
 
 export default function Mint() {
-  const store = useStore();
+  const walletConnected = useStore(s => s.walletConnected);
+  const walletAddress = useStore(s => s.walletAddress);
+  const mintStatus = useStore(s => s.mintStatus);
+  const mintQuantity = useStore(s => s.mintQuantity);
+  const txHash = useStore(s => s.txHash);
+  const totalMinted = useStore(s => s.totalMinted);
+  const walletMinted = useStore(s => s.walletMinted);
+  const errorMessage = useStore(s => s.errorMessage);
+  const walletModalOpen = useStore(s => s.walletModalOpen);
+  const lastMintedTokens = useStore(s => s.lastMintedTokens);
+  const setMintStatus = useStore(s => s.setMintStatus);
+  const setMintQuantity = useStore(s => s.setMintQuantity);
+  const setWalletModalOpen = useStore(s => s.setWalletModalOpen);
+  const simulateMint = useStore(s => s.simulateMint);
   const currentPhase = getCurrentPhase();
   const endRem = useCountdown(currentPhase?.endTime || '');
   const startRem = useCountdown(currentPhase?.startTime || '');
@@ -30,38 +47,53 @@ export default function Mint() {
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
-    if (store.walletConnected && store.mintStatus === 'no-wallet') store.setMintStatus('ready');
-    else if (!store.walletConnected && store.mintStatus !== 'no-wallet') store.setMintStatus('no-wallet');
+    // Keep the mint status in sync with the connection — but never touch the
+    // wallet modal: forcing status here while the modal is open would fight it.
+    if (walletConnected && mintStatus === 'no-wallet') setMintStatus('ready');
+    else if (!walletConnected && mintStatus !== 'no-wallet' && !walletModalOpen) setMintStatus('no-wallet');
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [store.walletConnected, store.mintStatus]);
+  }, [walletConnected, mintStatus, walletModalOpen]);
 
   const recent = useMemo(
-    () => [4821, 4820, 4819, 4818, 4817].map(id => ({ id, addr: `0x${hex(6)}…${hex(4)}` })),
+    () => [184, 183, 182, 181, 180].map(id => ({ id, addr: `0x${hex(6)}…${hex(4)}` })),
     []
   );
 
   const requestedId = parseInt(searchParams.get('token') || '', 10);
   const previewNft = config.nfts.find(nft => nft.id === requestedId) || config.nfts.find(nft => nft.image);
 
+  // A new selection (different ?token=) starts a fresh mint:
+  // clear any stale success/failed state so the button works again.
+  useEffect(() => {
+    if (mintStatus === 'success' || mintStatus === 'failed') setMintStatus('ready');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [requestedId]);
+
   const handleBack = () => (location.key !== 'default' ? navigate(-1) : navigate('/collection'));
 
   const maxQty = currentPhase
-    ? Math.max(1, Math.min(currentPhase.maxPerTx, currentPhase.maxPerWallet - store.walletMinted, config.collection.totalSupply - store.totalMinted))
+    ? Math.max(1, Math.min(currentPhase.maxPerTx, currentPhase.maxPerWallet - walletMinted, config.collection.totalSupply - totalMinted))
     : 1;
 
   const sym = config.chain.currencySymbol;
   const pricePerNft = currentPhase ? currentPhase.priceEth : '0';
-  const totalPrice = currentPhase ? (parseFloat(currentPhase.priceEth) * store.mintQuantity).toFixed(3) : '0';
-  const setQty = (n: number) => store.setMintQuantity(Math.max(1, Math.min(maxQty, n)));
+  const totalPrice = currentPhase ? (parseFloat(currentPhase.priceEth) * mintQuantity).toFixed(3) : '0';
+  const setQty = (n: number) => setMintQuantity(Math.max(1, Math.min(maxQty, n)));
+
+  const openWalletModal = () => setWalletModalOpen(true);
 
   const handleMint = () => {
-    if (!store.walletConnected) { store.setWalletModalOpen(true); return; }
-    if (store.mintStatus === 'ready') store.simulateMint();
+    if (!walletConnected) { openWalletModal(); return; }
+    if (mintStatus === 'ready') {
+      // Mint the previewed/selected token first, then fill the rest randomly.
+      const preferred = Number.isFinite(requestedId) ? [requestedId] : [];
+      simulateMint(preferred);
+    }
   };
 
   const label = (() => {
-    if (!store.walletConnected) return 'Connect Wallet';
-    switch (store.mintStatus) {
+    if (!walletConnected) return 'Connect Wallet';
+    switch (mintStatus) {
       case 'wrong-network': return `Switch to ${config.chain.name}`;
       case 'upcoming': return `Starts in ${startRem}`;
       case 'not-eligible': return 'Not on the allowlist';
@@ -71,21 +103,21 @@ export default function Mint() {
       case 'pending-tx': return 'Minting...';
       case 'sold-out': return 'Sold Out';
       case 'paused': return 'Mint Paused';
-      default: return `Mint ${store.mintQuantity} for ${totalPrice} ${sym}`;
+      default: return `Mint ${mintQuantity} for ${totalPrice} ${sym}`;
     }
   })();
 
-  const disabled = store.walletConnected && store.mintStatus !== 'ready';
-  const why = store.walletConnected ? WHY[store.mintStatus] : '';
-  const upcoming = store.mintStatus === 'upcoming';
+  const disabled = walletConnected && mintStatus !== 'ready';
+  const why = walletConnected ? WHY[mintStatus] : '';
+  const upcoming = mintStatus === 'upcoming';
 
   const ActionButton = ({ className = '' }: { className?: string }) =>
-    !store.walletConnected ? (
-      <button className={`btn primary full ${className}`} onClick={() => store.setWalletModalOpen(true)}>
+    !walletConnected ? (
+      <button type="button" className={`btn primary full ${className}`} onClick={openWalletModal}>
         <Icon name="wallet" size={16} /> Connect Wallet
       </button>
     ) : (
-      <button className={`btn primary full ${disabled ? 'disabled' : ''} ${className}`} onClick={handleMint} disabled={disabled} aria-live="polite">
+      <button type="button" className={`btn primary full ${disabled ? 'disabled' : ''} ${className}`} onClick={handleMint} disabled={disabled} aria-live="polite">
         {label}
       </button>
     );
@@ -128,7 +160,7 @@ export default function Mint() {
 
           <div className="price-row"><span>Price per NFT</span><span className="val">{pricePerNft} {sym}</span></div>
           <div className="price-row mint-total">
-            <span>Total ({store.mintQuantity})</span>
+            <span>Total ({mintQuantity})</span>
             <span className="val">{totalPrice} {sym}</span>
           </div>
 
@@ -136,71 +168,82 @@ export default function Mint() {
             <label htmlFor="qty" className="mint-label">Quantity (max {maxQty})</label>
             <div className="mint-qty">
               <div className="qty-stepper">
-                <button onClick={() => setQty(store.mintQuantity - 1)} disabled={store.mintQuantity <= 1} aria-label="Decrease quantity">−</button>
-                <div className="qty-val" id="qty" aria-live="polite">{store.mintQuantity}</div>
-                <button onClick={() => setQty(store.mintQuantity + 1)} disabled={store.mintQuantity >= maxQty} aria-label="Increase quantity">+</button>
+                <button type="button" onClick={() => setQty(mintQuantity - 1)} disabled={mintQuantity <= 1} aria-label="Decrease quantity">−</button>
+                <div className="qty-val" id="qty" aria-live="polite">{mintQuantity}</div>
+                <button type="button" onClick={() => setQty(mintQuantity + 1)} disabled={mintQuantity >= maxQty} aria-label="Increase quantity">+</button>
               </div>
               {maxQty > 1 && (
-                <button className="btn sm" onClick={() => setQty(maxQty)} disabled={store.mintQuantity >= maxQty}>Max</button>
+                <button type="button" className="btn sm" onClick={() => setQty(maxQty)} disabled={mintQuantity >= maxQty}>Max</button>
               )}
             </div>
           </div>
 
           <div className="wallet-status">
-            <div className={`wallet-dot ${store.walletConnected ? (store.mintStatus === 'wrong-network' ? 'red' : 'green') : 'yellow'}`} />
+            <div className={`wallet-dot ${walletConnected ? (mintStatus === 'wrong-network' ? 'red' : 'green') : 'yellow'}`} />
             <span className="mint-wallet-txt">
-              {!store.walletConnected
+              {!walletConnected
                 ? 'Wallet not connected'
-                : store.mintStatus === 'wrong-network'
+                : mintStatus === 'wrong-network'
                   ? `Wrong network. Switch to ${config.chain.name}.`
-                  : `Connected: ${store.walletAddress?.slice(0, 6)}…${store.walletAddress?.slice(-4)}`}
+                  : `Connected: ${walletAddress?.slice(0, 6)}…${walletAddress?.slice(-4)}`}
             </span>
           </div>
 
           <div className="mint-cta-inline"><ActionButton className="mint-big" /></div>
           {why && <p className="mint-why" role="status">{why}</p>}
 
-          <ProgressBar minted={store.totalMinted} total={config.collection.totalSupply} />
+          <ProgressBar minted={totalMinted} total={config.collection.totalSupply} />
 
           <p className="mint-fine">
             Gas fees apply. Transactions are final. Contract: {config.contract.address || 'Not deployed (demo mode)'}
           </p>
 
-          {store.mintStatus === 'success' && (
+          {mintStatus === 'success' && (
             <div className="result-card">
               <h3 className="mint-res-h"><Icon name="success" size={20} /> Mint Successful!</h3>
               <p>Your Moai are in your wallet.</p>
               <div className="mint-won">
-                {store.lastMintedTokens.map(t => (
-                  <div key={t.id}>
-                    <span className="mint-won-art"><PlaceholderArt tokenId={t.id} /></span>
-                    <small>{t.name}</small>
-                  </div>
-                ))}
+                {lastMintedTokens.map(t => {
+                  const full = nftById.get(t.id);
+                  return (
+                    <div key={t.id}>
+                      <span className="mint-won-art">
+                        {full?.image ? (
+                          <ProgressiveImage src={full.image} thumb={full.thumb} alt={full.name} />
+                        ) : (
+                          <PlaceholderArt tokenId={t.id} />
+                        )}
+                      </span>
+                      <small>{t.name}</small>
+                    </div>
+                  );
+                })}
               </div>
               <div className="mint-res-btns">
                 <Link to="/my-nfts" className="btn sm primary">View My NFTs</Link>
+                {/* Mint another: reset to ready so the form works again */}
+                <button type="button" className="btn sm" onClick={() => setMintStatus('ready')}>Mint Another</button>
                 {config.links.marketplace && (
                   <a href={config.links.marketplace} target="_blank" rel="noopener noreferrer" className="btn sm">Marketplace</a>
                 )}
-                {store.txHash && (
-                  <a href={`${config.chain.blockExplorerUrl}/tx/${store.txHash}`} target="_blank" rel="noopener noreferrer" className="btn sm">Transaction ↗</a>
+                {txHash && (
+                  <a href={`${config.chain.blockExplorerUrl}/tx/${txHash}`} target="_blank" rel="noopener noreferrer" className="btn sm">Transaction ↗</a>
                 )}
               </div>
             </div>
           )}
 
-          {store.mintStatus === 'failed' && (
+          {mintStatus === 'failed' && (
             <div className="result-card error">
               <h3 className="mint-res-h"><Icon name="error" size={20} /> Transaction Failed</h3>
-              <p>{store.errorMessage || 'Something went wrong. Please try again.'}</p>
-              <button className="btn sm" onClick={() => store.setMintStatus('ready')}>Try Again</button>
+              <p>{errorMessage || 'Something went wrong. Please try again.'}</p>
+              <button type="button" className="btn sm" onClick={() => setMintStatus('ready')}>Try Again</button>
             </div>
           )}
 
-          {store.mintStatus === 'pending-tx' && store.txHash && (
+          {mintStatus === 'pending-tx' && txHash && (
             <div className="mint-tx">
-              Transaction: <a href={`${config.chain.blockExplorerUrl}/tx/${store.txHash}`} target="_blank" rel="noopener noreferrer">{store.txHash.slice(0, 16)}…</a>
+              Transaction: <a href={`${config.chain.blockExplorerUrl}/tx/${txHash}`} target="_blank" rel="noopener noreferrer">{txHash.slice(0, 16)}…</a>
             </div>
           )}
 
@@ -219,7 +262,7 @@ export default function Mint() {
       {/* Phones: sticky action bar */}
       <div className="mint-bar">
         <div className="mint-bar-sum">
-          <small>{store.mintQuantity} × {pricePerNft} {sym}</small>
+          <small>{mintQuantity} × {pricePerNft} {sym}</small>
           <b>{totalPrice} {sym}</b>
         </div>
         <ActionButton className="mint-bar-btn" />

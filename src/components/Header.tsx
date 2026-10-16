@@ -17,8 +17,7 @@ export default function Header() {
   const store = useStore() as any;
   const { mobileMenuOpen, setMobileMenuOpen } = store;
 
-  // Wallet address: adjust the field name here if your store uses a different one
-  const address: string | undefined = store.address ?? store.wallet?.address ?? store.account;
+  const address: string | undefined = store.walletAddress ?? undefined;
   const ownerAddress: string | undefined = (config as any).admin?.ownerAddress;
   const isOwner = !!address && !!ownerAddress && address.toLowerCase() === ownerAddress.toLowerCase();
 
