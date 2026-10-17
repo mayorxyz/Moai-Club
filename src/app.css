@@ -1981,9 +1981,18 @@ img {
 
 /* ---------- Header shell ---------- */
 .hdr {
-  position: sticky;
-  top: 0;
-  z-index: 50
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  width: min(var(--maxw), 100%);
+  padding-inline: clamp(12px, 4vw, 16px);
+  transform: translateX(-50%);
+  z-index: 50;
+}
+
+.hdr-spacer {
+  height: var(--hdr-h, 70px);
+  flex: none;
 }
 
 .hdr-bar {
@@ -2628,9 +2637,13 @@ img {
 
 /* ---------- Header shell ---------- */
 .hdr {
-  position: sticky;
-  top: 0;
-  z-index: 50
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  width: min(var(--maxw), 100%);
+  padding-inline: clamp(12px, 4vw, 16px);
+  transform: translateX(-50%);
+  z-index: 50;
 }
 
 .hdr-bar {

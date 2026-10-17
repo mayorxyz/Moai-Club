@@ -245,6 +245,7 @@ export default function Header() {
         {/* Mobile phase strip */}
         <div className="hdr-strip"><PhaseStatusBadge /></div>
       </header>
+      <div className="hdr-spacer" aria-hidden="true" />
 
       {mobileMenuOpen && (
         <>
