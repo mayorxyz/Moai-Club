@@ -51,11 +51,7 @@ export default function Terms() {
         <button className="legal-print" onClick={() => window.print()}>Print</button>
       </p>
 
-      {DRAFT && (
-        <div className="legal-placeholder">
-          <Icon name="warning" size={16} /> Replace with reviewed legal text before launch.
-        </div>
-      )}
+     
 
       <div className="box legal-key">
         <b>Key points</b>
