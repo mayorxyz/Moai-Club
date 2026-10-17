@@ -259,24 +259,21 @@ export default function Header() {
               const firstTo = g.to ?? items.find(i => i.to)?.to;
               return (
                 <div key={g.label} className={`mnav-acc ${isOpen ? 'open' : ''}`}>
-                  {/* Added flex styles to force left/right alignment */}
-                  <div className="mnav-acc-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                  <div className="mnav-acc-row">
                     {firstTo ? (
                       <Link
                         to={firstTo}
                         className="mnav-acc-label"
                         onClick={() => setMobileMenuOpen(false)}
-                        style={{ flex: 1, paddingRight: '8px', textDecoration: 'none', color: 'inherit' }}
                       >
                         {g.label}
                       </Link>
                     ) : (
-                      <span className="mnav-acc-label" style={{ flex: 1, paddingRight: '8px' }}>
+                      <span className="mnav-acc-label">
                         {g.label}
                       </span>
                     )}
 
-                    {/* Added styles to override the bad 'width: 100%' CSS rule and lock it to the right */}
                     <button
                       type="button"
                       className="mnav-acc-btn"
@@ -288,25 +285,8 @@ export default function Header() {
                         const body = (e.currentTarget.closest('.mnav-acc')?.querySelector('.mnav-acc-body') ?? null) as HTMLElement | null;
                         requestAnimationFrame(() => body?.scrollIntoView({ block: 'nearest' }));
                       }}
-                      style={{
-                        width: '44px',
-                        minWidth: '44px',
-                        height: '44px',
-                        display: 'grid',
-                        placeItems: 'center',
-                        background: 'transparent',
-                        border: 'none',
-                        cursor: 'pointer',
-                        padding: '0',
-                        flexShrink: 0,
-                        color: 'var(--ink, #111)'
-                      }}
                     >
-                      <span
-                        className="mnav-acc-sign"
-                        aria-hidden="true"
-                        style={{ fontSize: '1.5rem', lineHeight: '1', display: 'block' }}
-                      >
+                      <span className="mnav-acc-sign" aria-hidden="true">
                         {isOpen ? '\u2212' : '+'}
                       </span>
                     </button>

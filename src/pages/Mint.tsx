@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import config from '../drop.config';
 import { useStore, getCurrentPhase } from '../store';
@@ -13,6 +13,11 @@ import { Icon } from '../components/Icon';
 const nftById = new Map(config.nfts.map(nft => [nft.id, nft]));
 
 const hex = (n: number) => Math.random().toString(16).slice(2, 2 + n);
+const pickPreviewNftId = (ownedIds: Set<number>) => {
+  const available = config.nfts.filter(nft => nft.image && !ownedIds.has(nft.id));
+  if (!available.length) return null;
+  return available[Math.floor(Math.random() * available.length)].id;
+};
 
 const WHY: Record<string, string> = {
   'wrong-network': `Switch your wallet to ${config.chain.name} to continue.`,
@@ -32,6 +37,7 @@ export default function Mint() {
   const txHash = useStore(s => s.txHash);
   const totalMinted = useStore(s => s.totalMinted);
   const walletMinted = useStore(s => s.walletMinted);
+  const mintedTokens = useStore(s => s.mintedTokens);
   const errorMessage = useStore(s => s.errorMessage);
   const walletModalOpen = useStore(s => s.walletModalOpen);
   const lastMintedTokens = useStore(s => s.lastMintedTokens);
@@ -45,6 +51,9 @@ export default function Mint() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
+  const [randomPreviewId, setRandomPreviewId] = useState<number | null>(() =>
+    pickPreviewNftId(new Set(useStore.getState().mintedTokens.map(token => token.id)))
+  );
 
   useEffect(() => {
     // Keep the mint status in sync with the connection — but never touch the
@@ -60,7 +69,16 @@ export default function Mint() {
   );
 
   const requestedId = parseInt(searchParams.get('token') || '', 10);
-  const previewNft = config.nfts.find(nft => nft.id === requestedId) || config.nfts.find(nft => nft.image);
+  const ownedIds = useMemo(() => new Set(mintedTokens.map(token => token.id)), [mintedTokens]);
+  const randomPreviewNft = config.nfts.find(nft => nft.id === randomPreviewId && nft.image && !ownedIds.has(nft.id));
+  const requestedNft = config.nfts.find(nft => nft.id === requestedId && nft.image && !ownedIds.has(nft.id));
+  const previewNft = requestedNft || randomPreviewNft || config.nfts.find(nft => nft.image && !ownedIds.has(nft.id));
+
+  useEffect(() => {
+    if (randomPreviewId === null || ownedIds.has(randomPreviewId)) {
+      setRandomPreviewId(pickPreviewNftId(ownedIds));
+    }
+  }, [mintedTokens, randomPreviewId, ownedIds]);
 
   // A new selection (different ?token=) starts a fresh mint:
   // clear any stale success/failed state so the button works again.
@@ -86,7 +104,7 @@ export default function Mint() {
     if (!walletConnected) { openWalletModal(); return; }
     if (mintStatus === 'ready') {
       // Mint the previewed/selected token first, then fill the rest randomly.
-      const preferred = Number.isFinite(requestedId) ? [requestedId] : [];
+      const preferred = previewNft ? [previewNft.id] : [];
       simulateMint(preferred);
     }
   };
