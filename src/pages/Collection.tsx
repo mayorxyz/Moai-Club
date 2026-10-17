@@ -28,9 +28,36 @@ const pageList = (page: number, total: number) => {
 export default function Collection() {
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<Sort>('asc');
+  const [sortOpen, setSortOpen] = useState(false);
   const [page, setPage] = useState(0);
   const gridRef = useRef<HTMLDivElement>(null);
+  const sortRef = useRef<HTMLDivElement>(null);
+  const sortTriggerRef = useRef<HTMLButtonElement>(null);
   const perPage = 24;
+  const sortOptions: { value: Sort; label: string; detail: string }[] = [
+    { value: 'asc', label: 'ID: Low to High', detail: 'Start with the first Moai' },
+    { value: 'desc', label: 'ID: High to Low', detail: 'Browse from the end' },
+    { value: 'random', label: 'Random', detail: 'Mix up the collection' },
+  ];
+
+  useEffect(() => {
+    if (!sortOpen) return;
+    const onPointerDown = (event: MouseEvent) => {
+      if (!sortRef.current?.contains(event.target as Node)) setSortOpen(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setSortOpen(false);
+        sortTriggerRef.current?.focus();
+      }
+    };
+    document.addEventListener('mousedown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [sortOpen]);
 
   const allNfts = useMemo(() => [...config.nfts], []);
   const shuffled = useMemo(() => shuffle(allNfts), [allNfts]);
@@ -96,11 +123,37 @@ export default function Collection() {
           autoCorrect="off"
           spellCheck={false}
         />
-        <select value={sort} onChange={e => { setSort(e.target.value as Sort); setPage(0); }} aria-label="Sort order">
-          <option value="asc">ID: Low to High</option>
-          <option value="desc">ID: High to Low</option>
-          <option value="random">Random</option>
-        </select>
+        <div className="col-sort" ref={sortRef}>
+          <button
+            ref={sortTriggerRef}
+            type="button"
+            className="col-sort-trigger"
+            aria-label="Sort order"
+            aria-haspopup="listbox"
+            aria-expanded={sortOpen}
+            onClick={() => setSortOpen(open => !open)}
+          >
+            <span className="col-sort-copy"><small>Sort collection</small><strong>{sortOptions.find(option => option.value === sort)?.label}</strong></span>
+            <span className={`col-sort-caret${sortOpen ? ' open' : ''}`} aria-hidden="true">⌄</span>
+          </button>
+          {sortOpen && (
+            <div className="col-sort-menu" role="listbox" aria-label="Sort collection">
+              {sortOptions.map(option => (
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={sort === option.value}
+                  className={`col-sort-option${sort === option.value ? ' selected' : ''}`}
+                  key={option.value}
+                  onClick={() => { setSort(option.value); setPage(0); setSortOpen(false); sortTriggerRef.current?.focus(); }}
+                >
+                  <span className="col-sort-option-text"><strong>{option.label}</strong><small>{option.detail}</small></span>
+                  <span className="col-sort-check" aria-hidden="true">{sort === option.value ? '✓' : ''}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="col-meta" ref={gridRef} aria-live="polite">
