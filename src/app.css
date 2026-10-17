@@ -2479,6 +2479,23 @@ img {
   border: 0;
 }
 .mnav-acc-row .mnav-acc-sign { display: block; font-size: 1.5rem; line-height: 1; }
+.mnav .mnav-mint-acc,
+.mnav .mnav-mint-acc.open { background: var(--orange); }
+.mnav-mint-acc .mnav-acc-row { padding-left: 16px; }
+.mnav-mint-label {
+  flex: 1;
+  min-width: 0;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  color: #fff;
+  text-decoration: none;
+  font: 800 1.1rem var(--font-head);
+  overflow-wrap: anywhere;
+}
+.mnav-mint-acc .mnav-acc-btn { color: #fff; }
+.mnav-mint-acc .mnav-acc-body { margin: 0 8px 8px; border: 3px solid var(--ink); border-radius: 10px; }
+.mnav-mint-acc .mnav-acc-body .hdr-item { color: var(--ink); }
 
 .mnav-social {
   display: grid;
@@ -3087,6 +3104,25 @@ img {
   border: 0;
 }
 .mnav-acc-row .mnav-acc-sign { display: block; font-size: 1.5rem; line-height: 1; }
+
+/* Keep mobile accordion submenus fully inside their parent cards. */
+.mnav .mnav-acc-body {
+  box-sizing: border-box;
+  width: auto;
+  min-width: 0;
+  max-width: calc(100% - 16px);
+  margin: 0 8px 8px;
+  padding: 6px;
+  border: 3px solid var(--ink);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.mnav .mnav-acc-body .hdr-item {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+}
 
 .mnav-social {
   display: grid;

@@ -60,10 +60,7 @@ export default function Allowlist() {
       </ol>
 
       <div className="al-check">
-        {config.mock && (
-          <div className="box al-demo"><Icon name="warning" size={18} /><p>Demo mode — results are simulated.</p></div>
-        )}
-
+    
         <form className="box" onSubmit={e => { e.preventDefault(); handleCheck(); }}>
           <label htmlFor="al-address">Wallet Address</label>
           <input

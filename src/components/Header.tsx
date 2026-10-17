@@ -250,7 +250,37 @@ export default function Header() {
         <>
           <div className="mnav-backdrop" onClick={() => setMobileMenuOpen(false)}></div>
           <div className="mnav" id="mobile-menu" ref={sheetRef} role="dialog" aria-modal="true" aria-label="Menu">
-            <Link to="/mint" className="mnav-mint">Mint now</Link>
+            {(() => {
+              const mintGroup = navGroups.find(group => group.label === 'Mint');
+              const mintItems = mintGroup ? visible(mintGroup.items) : [];
+              const isMintOpen = acc === 'Mint';
+              return (
+                <div className={`mnav-acc mnav-mint-acc${isMintOpen ? ' open' : ''}`}>
+                  <div className="mnav-acc-row">
+                    <Link to="/mint" className="mnav-mint-label" onClick={() => setMobileMenuOpen(false)}>Mint now</Link>
+                    <button
+                      type="button"
+                      className="mnav-acc-btn"
+                      aria-expanded={isMintOpen}
+                      aria-label={`${isMintOpen ? 'Close' : 'Open'} Mint menu`}
+                      onClick={e => {
+                        if (isMintOpen) { setAcc(null); return; }
+                        setAcc('Mint');
+                        const body = e.currentTarget.closest('.mnav-acc')?.querySelector('.mnav-acc-body');
+                        requestAnimationFrame(() => body?.scrollIntoView({ block: 'nearest' }));
+                      }}
+                    >
+                      <span className="mnav-acc-sign" aria-hidden="true">{isMintOpen ? '\u2212' : '+'}</span>
+                    </button>
+                  </div>
+                  {isMintOpen && (
+                    <div className="mnav-acc-body">
+                      {mintItems.map(item => renderItem(item))}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
             {mobileGroups.map(g => {
               const items = visible(g.items);
